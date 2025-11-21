@@ -1,7 +1,7 @@
 /**
  * @file constant_string_traits.hpp
  * @brief Type traits dan concepts untuk string library
- * @version 1.0
+ * @version 1.0.2
  */
 
 #pragma once

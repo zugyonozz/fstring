@@ -1,7 +1,7 @@
 /**
  * @file constant_string_fwd.hpp
  * @brief Forward declarations untuk compile-time string library
- * @version 1.0
+ * @version 1.0.2
  */
 
 #pragma once
@@ -12,11 +12,11 @@
 namespace zuu {
 
 // Forward declarations
-template <typename CharT, std::size_t N>
-class string;
+template <typename = char, std::size_t = 0>
+class string ;
 
-template <typename CharT, bool IsConst>
-class string_iterator;
+template <typename, bool>
+class string_iterator ;
 
 namespace traits {
     template <typename T>
@@ -24,16 +24,6 @@ namespace traits {
     
     template <typename T>
     inline constexpr bool is_char_v = is_char<std::remove_cv_t<T>>::value;
-}
-
-namespace detail {
-    // Utility functions
-    template <traits::character CharT>
-    [[nodiscard]] constexpr std::size_t strlen(const CharT* str) noexcept;
-    
-    template <traits::character CharT>
-    [[nodiscard]] constexpr int strcmp(const CharT* a, const CharT* b, 
-                                        std::size_t len) noexcept;
 }
 
 // Type aliases

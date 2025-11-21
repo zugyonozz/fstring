@@ -1,7 +1,7 @@
 /**
  * @file constant_string_class.hpp
  * @brief Complete string class implementation (merged core + algorithms)
- * @version 1.0
+ * @version 1.0.2
  */
 
 #pragma once
@@ -20,8 +20,8 @@ namespace zuu {
  * @tparam CharT Character type (char, wchar_t, char8_t, char16_t, char32_t)
  * @tparam N Maximum capacity (excluding null terminator)
  */
-template <traits::character CharT = char, std::size_t N = 0>
-class string {
+template <traits::character CharT, std::size_t N>
+class string<CharT, N> {
 public:
     // ========================================================================
     // Type Definitions
@@ -415,9 +415,5 @@ template <std::size_t N>
     result.trim();
     return result;
 }
-
-// Deduction guides
-template <traits::character CharT, std::size_t N>
-string(const CharT (&)[N]) -> string<CharT, N - 1>;
 
 } // namespace zuu

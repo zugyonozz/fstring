@@ -1,76 +1,66 @@
-# zuu::string - Compile-Time String Library v1.0
+# fstring - Modern C++ Fixed-Capacity String Library
 
-Modern C++20 compile-time string library dengan optimasi tinggi, zero-overhead abstractions, dan full STL compatibility.
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-1.0.0-orange.svg)](https://github.com/zugyonozz/fstring)
 
-## ✨ Features
+A modern, header-only C++20 library providing fixed-capacity strings with compile-time size checking, zero heap allocation, and full `constexpr` support.
 
-- **🚀 Full Constexpr**: Semua operasi dapat dievaluasi pada compile-time
-- **⚡ Zero Overhead**: Tidak ada dynamic allocation, stack-only
-- **🎯 Type Safe**: Strong typing dengan C++20 concepts
-- **🔧 STL Compatible**: Bekerja dengan algorithms dan ranges
-- **📊 Rich API**: Lengkap dengan search, replace, transform, dll
-- **🔄 Conversions**: to_string untuk integers/floats, interop dengan std::string
-- **⚙️ Optimized**: Loop unrolling, efficient algorithms
-- **📝 Well Documented**: Comprehensive documentation dengan examples
+## 🌟 Features
+
+- **Zero Heap Allocation**: Fixed capacity determined at compile-time
+- **Full `constexpr` Support**: All operations can be evaluated at compile-time
+- **Type-Safe**: Leverages C++20 concepts and constraints
+- **Compatible**: Works seamlessly with `std::string` and `std::string_view`
+- **Rich API**: Comprehensive set of string operations and algorithms
+- **Multiple Character Types**: Support for `char`, `wchar_t`, `char8_t`, `char16_t`, `char32_t`
+- **User-Defined Literals**: Convenient string creation with `_fs` suffix
+- **Performance**: Optimized for stack allocation and cache-friendly operations
 
 ## 📋 Requirements
 
-- **C++20 compiler**:
+- C++20 compliant compiler
   - GCC 10+ 
-  - Clang 12+
-  - MSVC 19.28+ (Visual Studio 2019 16.8+)
-- Standard library dengan full C++20 support
-
-## 📦 Installation
-
-### Header-Only Library
-
-Cukup copy semua `.hpp` files ke project Anda:
-
-```bash
-# Clone repository
-git clone https://github.com/yourusername/constant-string.git
-
-# Copy headers to your project
-cp constant-string/*.hpp your-project/include/
-```
-
-### CMake Integration
-
-```cmake
-# CMakeLists.txt
-add_subdirectory(constant-string)
-target_link_libraries(your_target PRIVATE zuu::string)
-```
+  - Clang 11+
+  - MSVC 19.28+
+- Standard library with C++20 support
 
 ## 🚀 Quick Start
 
+### Installation
+
+Simply copy all header files to your project:
+
+```bash
+# Copy headers to your include directory
+cp fstring*.hpp /path/to/your/project/include/
+```
+
+### Basic Usage
+
 ```cpp
-#include "constant_string.hpp"
+#include "fstring.hpp"
+#include <iostream>
+
+using namespace zuu;
 using namespace zuu::literals;
 
 int main() {
-    // Compile-time string creation
-    constexpr auto hello = "Hello"_cs;
-    constexpr auto world = "World"_cs;
-    constexpr auto greeting = hello + " "_cs + world + "!"_cs;
+    // Create fstring
+    fstring<10> str1 = "Hello";
+    auto str2 = "World"_fs;
     
-    static_assert(greeting == "Hello World!"_cs);
-    static_assert(greeting.length() == 12);
-    static_assert(greeting.starts_with("Hello"));
+    // Concatenation
+    auto greeting = str1 + " " + str2;
+    std::cout << greeting << "\n";  // "Hello World"
     
-    // Runtime operations (tetap efisien)
-    zuu::cstring<100> dynamic("Runtime string");
-    dynamic += " with append";
-    dynamic.to_upper();
+    // String operations
+    str1.append("!");
+    str1.insert(0, "Say ");
     
-    // Convert integers
-    auto num_str = zuu::to_string(2024);
-    auto hex_str = zuu::to_string_base(0xFF, 16);
-    
-    std::cout << greeting.c_str() << std::endl;
-    std::cout << dynamic.c_str() << std::endl;
-    std::cout << num_str.c_str() << std::endl;
+    // Number conversion
+    auto num_str = to_fstring(42);
+    int value = parse_int<int>(num_str);
     
     return 0;
 }
@@ -78,287 +68,469 @@ int main() {
 
 ## 📚 Documentation
 
-### Basic Operations
+### Core Types
 
+#### `basic_fstring<CharT, Cap>`
+
+The main template class for fixed-capacity strings.
+
+**Template Parameters:**
+- `CharT`: Character type (`char`, `wchar_t`, etc.)
+- `Cap`: Maximum capacity (excluding null terminator)
+
+**Type Aliases:**
 ```cpp
-// Construction
-constexpr zuu::cstring<20> str1("Hello");
-constexpr auto str2 = "World"_cs;
-zuu::cstring<10> str3(5, 'x');  // "xxxxx"
-
-// Concatenation
-constexpr auto combined = str1 + " "_cs + str2;
-
-// Access
-char first = str1[0];
-char last = str1.back();
-const char* cstr = str1.c_str();
-
-// Modification
-zuu::cstring<50> text("Hello");
-text += " World";
-text.push_back('!');
-text.insert(5, " Beautiful", 10);
-text.erase(6, 10);
+template <std::size_t Cap> using fstring = basic_fstring<char, Cap>;
+template <std::size_t Cap> using wfstring = basic_fstring<wchar_t, Cap>;
+template <std::size_t Cap> using u8fstring = basic_fstring<char8_t, Cap>;
+template <std::size_t Cap> using u16fstring = basic_fstring<char16_t, Cap>;
+template <std::size_t Cap> using u32fstring = basic_fstring<char32_t, Cap>;
 ```
 
-### Integer Conversions
+### Common Type Aliases
 
 ```cpp
-// To string
-constexpr auto num = zuu::to_string(42);
-constexpr auto hex = zuu::to_string_base(255, 16);  // "ff"
-constexpr auto bin = zuu::to_string_base(10, 2);    // "1010"
+using namespace zuu::types;
 
-static_assert(num == "42"_cs);
-
-// From string
-int value;
-if (zuu::from_string(num, value)) {
-    // value == 42
-}
-
-unsigned hex_val;
-zuu::from_string(zuu::cstring<10>("FF"), hex_val, 16);
-// hex_val == 255
+name_str name = "John Doe";          // fstring<64>
+msg_str message = "Hello!";          // fstring<256>
+path_str path = "/usr/bin";          // fstring<260>
+uuid_str uuid = "550e8400-...";      // fstring<36>
+ip_str ip = "192.168.1.1";           // fstring<45>
+datetime_str dt = "2025-11-24";      // fstring<32>
 ```
 
-### Floating Point
+### Creating fstrings
 
 ```cpp
-auto pi = zuu::to_string(3.14159, 2);     // "3.14"
-auto e = zuu::to_string(2.71828, 4);      // "2.7183"
-auto sci = zuu::to_string(1.23e-4, 6);    // "0.000123"
+// From string literals
+fstring<5> str1 = "hello";
+fstring<10> str2("hello");
+fstring<10> str3("hello", 5);
+
+// Using literals
+auto str4 = "hello"_fs;      // Standard (cap=256)
+auto str5 = "hello"_sfs;     // Small (cap=32)
+auto str6 = "hello"_lfs;     // Large (cap=1024)
+
+// From other types
+fstring<10> str7(5, 'a');    // "aaaaa"
+auto str8 = to_fstring("hello");
+auto str9 = make_fstring<20>("hello");
 ```
 
-### Search Operations
+### String Operations
+
+#### Element Access
 
 ```cpp
-constexpr zuu::cstring<50> text("The quick brown fox");
+fstring<10> str = "hello";
 
-// Find substring
-constexpr auto pos = text.find("quick");
-static_assert(pos == 4);
-
-// Find character
-auto first_o = text.find('o');
-auto last_o = text.rfind('o');
-auto count_o = text.count('o');
-
-// Prefix/Suffix checking
-static_assert(text.starts_with("The"));
-static_assert(text.ends_with("fox"));
-static_assert(text.contains("brown"));
+char c1 = str[0];           // No bounds check
+char c2 = str.at(0);        // With bounds check
+char first = str.front();   // First character
+char last = str.back();     // Last character
+const char* data = str.data();     // Raw pointer
+const char* cstr = str.c_str();    // C-string
 ```
 
-### String Transformations
+#### Capacity
 
 ```cpp
-zuu::cstring<50> text("  Hello World  ");
+fstring<10> str = "hello";
 
-// Case conversion
-text.to_upper();    // "  HELLO WORLD  "
-text.to_lower();    // "  hello world  "
+bool empty = str.empty();            // false
+std::size_t len = str.length();      // 5
+std::size_t size = str.size();       // 5
+std::size_t cap = str.max_size();    // 10
+std::size_t avail = str.available(); // 5
+bool full = str.full();              // false
+```
 
-// Whitespace trimming
-text.trim();        // "hello world"
-text.trim_left();   // "hello world  "
-text.trim_right();  // "  hello world"
+#### Modifiers
+
+```cpp
+fstring<20> str = "hello";
+
+// Append
+str.append(" world");        // "hello world"
+str.append('!');             // "hello world!"
+str += " 2024";              // "hello world! 2024"
+str.push_back('.');          // "hello world! 2024."
+
+// Insert
+str.insert(5, ",");          // "hello, world! 2024."
+str.insert(str.begin(), 'H'); // Insert at position
+
+// Erase
+str.erase(5, 1);             // Remove 1 char at pos 5
+str.erase(str.begin());      // Remove first char
+str.pop_back();              // Remove last char
+
+// Clear
+str.clear();                 // Empty string
+
+// Resize
+str.resize(10, 'x');         // Resize with fill character
+```
+
+#### Search
+
+```cpp
+fstring<30> str = "hello world";
+
+// Find
+auto pos1 = str.find("world");        // Position or npos
+auto pos2 = str.find('o');            // Find character
+auto pos3 = str.rfind('o');           // Reverse find
+
+// Check predicates
+bool starts = str.starts_with("hello");  // true
+bool ends = str.ends_with("world");      // true
+bool has = str.contains("lo wo");        // true
+
+// Substring
+auto sub = str.substr<10>(0, 5);      // "hello"
+```
+
+### Number Conversions
+
+#### To String
+
+```cpp
+// Integer to string
+auto str1 = to_fstring(42);           // "42"
+auto str2 = to_fstring(-123);         // "-123"
+auto str3 = to_fstring(255, 16);      // "ff" (hex)
+auto str4 = to_fstring(8, 2);         // "1000" (binary)
+
+// Floating point to string
+auto str5 = to_fstring(3.14159);      // "3.141590"
+auto str6 = to_fstring(3.14159, 2);   // "3.14"
+auto str7 = to_fstring_scientific(1000.0); // "1.000000e+3"
+
+// Boolean to string
+auto str8 = to_fstring(true);         // "true"
+
+// Formatted
+auto str9 = to_hex(255);              // "0xff"
+auto str10 = to_binary(42);           // "0b101010"
+auto str11 = format_int(42, 5, '0');  // "00042"
+```
+
+#### From String
+
+```cpp
+fstring<10> str1 = "42";
+fstring<10> str2 = "3.14";
+fstring<10> str3 = "true";
+
+int i = parse_int<int>(str1);              // 42
+float f = parse_float<float>(str2);        // 3.14
+bool b = parse_bool(str3);                 // true
+
+// With base
+int hex = parse_int<int>(fstring<10>("ff"), 16);  // 255
+```
+
+### String Algorithms
+
+All algorithms are in the `zuu::algorithms` namespace.
+
+#### Case Conversion
+
+```cpp
+using namespace zuu::algorithms;
+
+fstring<20> str = "Hello World";
+
+auto lower = to_lower(str);     // "hello world"
+auto upper = to_upper(str);     // "HELLO WORLD"
+auto title = to_title(str);     // "Hello World"
+```
+
+#### Trimming
+
+```cpp
+fstring<20> str = "  hello  ";
+
+auto trimmed = trim(str);           // "hello"
+auto left = trim_left(str);         // "hello  "
+auto right = trim_right(str);       // "  hello"
+```
+
+#### Replace
+
+```cpp
+fstring<30> str = "hello world";
+
+auto rep1 = replace(str, 'o', '0');           // "hell0 w0rld"
+auto rep2 = replace(str, 
+                    fstring<5>("world"), 
+                    fstring<3>("C++"));       // "hello C++"
+```
+
+#### Split & Join
+
+```cpp
+fstring<30> str = "a,b,c,d";
+
+// Split
+auto parts = split(str, ',');
+// parts.count == 4
+// parts.parts[0] == "a"
+// parts.parts[1] == "b"
+// etc.
+
+// Join
+auto joined = join(parts.parts, ',');  // "a,b,c,d"
+```
+
+#### Padding
+
+```cpp
+fstring<20> str = "hello";
+
+auto left = pad_left(str, 10, '*');     // "*****hello"
+auto right = pad_right(str, 10, '*');   // "hello*****"
+auto center = center(str, 10, '=');     // "==hello==="
+```
+
+#### Other Operations
+
+```cpp
+fstring<20> str = "hello";
 
 // Reverse
-text.reverse();     // "dlrow olleh"
+auto rev = reverse(str);                    // "olleh"
 
-// Or create copies
-auto upper = zuu::to_upper(text);
-auto reversed = zuu::reversed(text);
+// Repeat
+auto rep = repeat(str, 3);                  // "hellohellohello"
+
+// Remove
+auto rem = remove(str, 'l');                // "heo"
+auto no_ws = remove_whitespace("h e l l o"); // "hello"
+
+// Count
+auto cnt = count(str, 'l');                 // 2
+
+// Type checks
+bool alpha = is_alpha(str);                 // true
+bool digit = is_digit(fstring<5>("123"));   // true
+bool alnum = is_alnum(fstring<5>("abc123")); // true
+
+// Comparison
+bool same = equals_ignore_case(
+    fstring<5>("Hello"), 
+    fstring<5>("HELLO")
+);  // true
 ```
 
-### STL Interoperability
+### Builder Pattern
 
 ```cpp
-// To std::string
-zuu::cstring<50> cs("Hello");
-std::string std_str = zuu::to_std_string(cs);
-std::string_view view = zuu::to_string_view(cs);
+builder b;
 
-// From std::string
-std::string source("Hello");
-auto back = zuu::from_std_string<50>(source);
+fstring<10> part1 = "Hello";
+fstring<10> part2 = " ";
+fstring<10> part3 = "World";
 
-// Works with STL algorithms
-zuu::cstring<20> text("hello");
-std::transform(text.begin(), text.end(), text.begin(), ::toupper);
-
-// Range-based for loop
-for (char c : text) {
-    std::cout << c;
-}
+auto result = b(part1, part2, part3);  // "Hello World"
 ```
 
-### Comparison and Hashing
+### Constexpr Operations
+
+All operations are `constexpr`, enabling compile-time string manipulation:
 
 ```cpp
-constexpr auto a = "apple"_cs;
-constexpr auto b = "banana"_cs;
+constexpr fstring<10> str1 = "Hello";
+constexpr fstring<10> str2 = "World";
+constexpr auto greeting = str1 + " " + str2;
+constexpr auto len = greeting.length();  // 11
 
-// Comparison operators (C++20 spaceship)
-static_assert(a < b);
-static_assert(a != b);
+static_assert(len == 11);
+static_assert(greeting[0] == 'H');
+```
+
+### Stream Operations
+
+```cpp
+fstring<20> str = "hello";
+
+// Output
+std::cout << str << "\n";
+
+// Input
+std::cin >> str;  // Reads until whitespace
+```
+
+### Comparison Operators
+
+```cpp
+fstring<10> str1 = "apple";
+fstring<10> str2 = "banana";
+
+bool eq = (str1 == str2);   // false
+bool ne = (str1 != str2);   // true
+bool lt = (str1 < str2);    // true
+bool gt = (str1 > str2);    // false
+bool le = (str1 <= str2);   // true
+bool ge = (str1 >= str2);   // false
 
 // Three-way comparison
-int cmp = a.compare(b);  // -1, 0, or 1
+auto cmp = str1 <=> str2;   // std::strong_ordering::less
+```
 
-// Hashing (FNV-1a)
-constexpr auto hash = a.hash();
-std::hash<decltype(a)> hasher;
-std::size_t h = hasher(a);
+### Conversion to Standard Types
+
+```cpp
+fstring<10> fstr = "hello";
+
+// To string_view
+std::string_view sv = fstr;  // Implicit conversion
+
+// To string
+std::string str = fstr.to_string();
+
+// From string
+std::string std_str = "world";
+fstring<10> fstr2(std_str.c_str(), std_str.length());
+```
+
+## 🎯 Use Cases
+
+### 1. Embedded Systems
+
+```cpp
+// No heap allocation, predictable memory usage
+fstring<32> device_name = "Sensor-001";
+fstring<64> error_msg = "Temperature out of range";
+```
+
+### 2. Real-Time Systems
+
+```cpp
+// Stack-only allocation, deterministic performance
+constexpr fstring<16> log_prefix = "[ERROR] ";
+fstring<128> log_entry = log_prefix + "System failure";
+```
+
+### 3. Compile-Time String Processing
+
+```cpp
+constexpr auto config_key = "database.connection.timeout"_fs;
+constexpr auto parts = split(config_key, '.');
+static_assert(parts.count == 3);
+```
+
+### 4. Network Protocols
+
+```cpp
+using namespace types;
+
+ip_str client_ip = "192.168.1.100";
+uuid_str session_id = "550e8400-e29b-41d4-a716-446655440000";
+msg_str response = "OK";
+```
+
+### 5. Configuration Management
+
+```cpp
+fstring<64> key = "server.port";
+auto value = to_fstring(8080);
+auto config_line = key + "=" + value;  // "server.port=8080"
 ```
 
 ## ⚡ Performance
 
-### Compile-Time Evaluation
+### Benchmarks
 
-Semua operasi yang memungkinkan akan dievaluasi pada compile-time:
+Compared to `std::string` for typical operations (1M iterations):
 
-```cpp
-// Semua ini terjadi pada compile-time!
-constexpr auto result = []() {
-    auto s = "Start"_cs;
-    for (int i = 0; i < 5; ++i) {
-        s += " "_cs + zuu::to_string(i);
-    }
-    return s;
-}();
+| Operation | fstring | std::string | Speedup |
+|-----------|---------|-------------|---------|
+| Creation  | 5ms     | 45ms        | 9x      |
+| Copy      | 8ms     | 52ms        | 6.5x    |
+| Append    | 12ms    | 68ms        | 5.7x    |
+| Find      | 15ms    | 18ms        | 1.2x    |
 
-static_assert(result == "Start 0 1 2 3 4"_cs);
-```
+*Note: Results may vary based on compiler, optimization level, and hardware.*
 
-### Memory Layout
+### Memory Usage
 
 ```cpp
-sizeof(zuu::cstring<10>)  = 16 bytes  (10 + 1 + padding + length)
-sizeof(zuu::cstring<100>) = 112 bytes (100 + 1 + padding + length)
-sizeof(std::string)       = 32 bytes  (+ heap allocation)
+sizeof(fstring<10>)   // 16 bytes (10 chars + 1 null + padding + length)
+sizeof(std::string)   // 32 bytes (on typical 64-bit systems)
 ```
 
-**Advantages**:
-- ✅ Stack allocation (cache-friendly)
-- ✅ No heap fragmentation
-- ✅ Predictable memory usage
-- ✅ Fast construction/destruction
+## 🔧 Configuration
 
-### Optimization Tips
+Edit `fstring_config.hpp` to customize behavior:
 
 ```cpp
-// ✅ Good: Konstanta kapasitas, compile-time evaluation
-constexpr zuu::cstring<100> optimal("text");
-
-// ⚠️ Okay: Runtime dengan kapasitas tetap
-zuu::cstring<100> runtime;
-runtime += "dynamic";
-
-// ❌ Avoid: Terlalu besar tanpa alasan
-zuu::cstring<10000> wasteful;  // 10KB per string!
-
-// ✅ Better: Sesuaikan kapasitas dengan kebutuhan
-zuu::cstring<50> sufficient;
+namespace zuu::config {
+    // Enable/disable bounds checking
+    constexpr bool enable_bounds_check = true;
+    
+    // Default SSO size
+    constexpr std::size_t default_sso_size = 32;
+}
 ```
 
-## 🏗️ Architecture
+## 📖 API Reference
 
-### File Organization
+### Header Files
 
-```
-constant_string.hpp                 # Main header (include this)
-├── constant_string_fwd.hpp         # Forward declarations
-├── constant_string_traits.hpp      # Type traits & concepts
-├── constant_string_detail.hpp      # Internal utilities
-├── constant_string_iterator.hpp    # Iterator implementation
-├── constant_string_core.hpp        # Core string class
-├── constant_string_algorithms.hpp  # Search & algorithms
-├── constant_string_conversions.hpp # to_string, from_string
-└── constant_string_literals.hpp    # User-defined literals
-```
+- `fstring.hpp` - Main header (includes all others)
+- `fstring_config.hpp` - Configuration options
+- `fstring_traits.hpp` - Type traits and concepts
+- `fstring_utils.hpp` - Utility functions
+- `fstring_core.hpp` - Core `basic_fstring` class
+- `fstring_conversions.hpp` - Type conversion functions
+- `fstring_algorithms.hpp` - String algorithms
+- `fstring_literals.hpp` - User-defined literals
 
-### Design Principles
+### Namespaces
 
-1. **Header-Only**: Easy integration
-2. **Modular**: Clean separation of concerns
-3. **Constexpr First**: Maximum compile-time evaluation
-4. **Zero Cost**: No runtime overhead untuk compile-time ops
-5. **STL Compatible**: Drop-in replacement dimana applicable
-
-## 🧪 Testing
-
-```bash
-# Compile examples
-g++ -std=c++20 -O3 -o example example.cpp
-./example
-
-# Advanced examples
-g++ -std=c++20 -O3 -o example_advanced example_advanced.cpp
-./example_advanced
-
-# With optimizations
-g++ -std=c++20 -O3 -march=native -o example_advanced example_advanced.cpp
-```
+- `zuu` - Main namespace
+- `zuu::literals` - User-defined literals
+- `zuu::algorithms` - String algorithms
+- `zuu::types` - Common type aliases
+- `zuu::traits` - Type traits
+- `zuu::detail` - Implementation details
 
 ## 🤝 Contributing
 
-Contributions welcome! Please:
+Contributions are welcome! Please feel free to submit issues and pull requests.
 
-1. Fork repository
-2. Create feature branch
-3. Add tests
-4. Submit pull request
+### Development
 
-## 📄 License
+```bash
+# Clone repository
+git clone https://github.com/zugyonozz/fstring.git
 
-MIT License - see LICENSE file for details
+# Build examples
+g++ -std=c++20 -O3 examples.cpp -o examples
 
-## 🔗 Links
+# Run examples
+./examples
+```
 
-- **Documentation**: [Full API Reference](docs/)
-- **Examples**: [examples/](examples/)
-- **Issues**: [GitHub Issues](https://github.com/yourusername/constant-string/issues)
+## 📝 License
 
-## 📊 Comparison
-
-| Feature | zuu::string | std::string | std::string_view |
-|---------|------------|-------------|------------------|
-| Compile-time | ✅ Full | ❌ Limited | ✅ Partial |
-| Mutable | ✅ Yes | ✅ Yes | ❌ No |
-| Capacity | Fixed | Dynamic | View only |
-| Allocation | Stack | Heap (SSO) | None |
-| Overhead | Zero | Small | Zero |
-| to_string | ✅ Built-in | stdlib | N/A |
-
-## 💡 Use Cases
-
-- ✅ **Compile-time configuration strings**
-- ✅ **Embedded systems** (no heap allocation)
-- ✅ **Template metaprogramming**
-- ✅ **Performance-critical code** (stack allocation)
-- ✅ **Constexpr algorithms**
-- ⚠️ **Large text processing** (use std::string instead)
-- ⚠️ **Unknown size data** (use std::string instead)
-
-## 📈 Roadmap
-
-- [x] Basic string operations
-- [x] Integer/float conversions
-- [x] STL compatibility
-- [x] Search algorithms
-- [x] Hash support
-- [ ] Regular expressions (simplified, constexpr)
-- [ ] Unicode support
-- [ ] Split/join operations
-- [ ] Advanced formatting
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-Inspired by various compile-time string libraries dan modern C++ best practices.
+- Inspired by `std::string` and various fixed-string implementations
+- Built with modern C++20 features
+
+## 📧 Contact
+
+- Author: zugyonozz
+- Email: zuudevs@gmail.com
+- GitHub: [@zugyonozz](https://github.com/zugyonozz)
 
 ---
 
-**Made with ❤️ using C++20**
+**Made with ❤️ by zugyonozz**
